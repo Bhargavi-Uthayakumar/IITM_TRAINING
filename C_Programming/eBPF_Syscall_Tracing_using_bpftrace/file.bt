@@ -1,0 +1,16 @@
+
+#!/usr/bin/env bpftrace
+
+tracepoint:syscalls:sys_enter_openat {
+    @open[comm] = count();
+}
+
+tracepoint:syscalls:sys_enter_close {
+    @close[comm] = count();
+}
+
+interval:s:5 {
+    printf("\n--- Syscall counts so far ---\n");
+    print(@open);
+    print(@close);
+}
