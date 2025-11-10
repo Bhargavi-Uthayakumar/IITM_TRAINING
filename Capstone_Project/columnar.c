@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+
+#ifdef _WIN32
+#define strcasecmp _stricmp
+#endif
 
 #define MAX_COLUMNS 10
 
@@ -58,8 +63,8 @@ Table *table_create(const char *name)
         perror("Failed to allocate table");
     }
 
-    strncpy(Emp_Table->name, name, sizeof(Emp_Table)-1);
-    Emp_Table->name[sizeof(Emp_Table)-1] = '\0';
+    strncpy(Emp_Table->name, name, sizeof(Emp_Table->name)-1);
+    Emp_Table->name[sizeof(Emp_Table->name)-1] = '\0';
     Emp_Table->col_count = 0;
     Emp_Table->row_count = 0;
     return Emp_Table;
@@ -93,13 +98,14 @@ void execute_insert(char *table, int *values, int count) {
         free(values);
         return;
     }
-    if (count != Employee->col_count) {
+    else if (count != Employee->col_count) {
         printf("Expected %zu values, got %d.\n", Employee->col_count, count);
         free(values);
         return;
     }
-
-    for (int i = 0; i < count; i++) {
+    else
+    {
+        for (int i = 0; i < count; i++) {
         Column *col = Employee->columns[i];
         if (col->count >= col->capacity) {
             col->capacity *= 2;
@@ -114,6 +120,7 @@ void execute_insert(char *table, int *values, int count) {
     Employee->row_count++;
     printf("Inserted row into %s.\n", table);
     free(values);
+}
 }
 
 void column_aggregate(Column *col, const char *agg) {
@@ -148,16 +155,39 @@ void column_aggregate(Column *col, const char *agg) {
 }
 
 void execute_select(char *agg, char *column, char *table) {
-    if (strcmp(table, Employee->name) != 0) {
+    if (strcasecmp(table, Employee->name) != 0) {
         printf("Unknown table '%s'\n", table);
         return;
     }
 
     for (size_t i = 0; i < Employee->col_count; i++) {
-        if (strcmp(Employee->columns[i]->name, column) == 0) {
+        if (strcasecmp(Employee->columns[i]->name, column) == 0) {
             column_aggregate(Employee->columns[i], agg);
             return;
         }
     }
     printf("Unknown column '%s'\n", column);
+}
+
+int yyparse();
+
+int main() {
+    Employee = table_create("Employee");
+    table_get_column(Employee, "salary");
+    table_get_column(Employee, "age");
+    table_get_column(Employee, "experience");
+
+    printf("Mini Columnar SQL Engine (Flex+Bison)\n");
+    printf("Example commands:\n");
+    printf("  INSERT INTO Employee VALUES (50000, 30, 5);\n");
+    printf("  SELECT SUM(salary) FROM Employee;\n");
+    printf("Type Ctrl+D to quit.\n");
+
+    yyparse(); 
+
+    printf("Shutting down...\n");
+    table_free(Employee);
+    printf("Memory freed. Exiting.\n");
+
+    return 0;
 }
