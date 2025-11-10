@@ -38,12 +38,13 @@ The SQL engine accepts simple queries such as:
 |     main.c (CLI Engine)      |
 +--------------+---------------+
                |
-+--------------v---------------+
-|  Columnar Engine (columnar.c)|
++--------------v----------------+
+|  Columnar Engine (columnar.c) |
 |  - Column structure           |
 |  - Table structure            |
-|  - Aggregate functions (SUM,AVG) |
-+------------------------------+
+|  - Aggregate functions        |
+|   (SUM,AVG,COUNT,MIN,MAX)     |
++-------------------------------+
 			   |
 +--------------v---------------+
 |     SQL Parser (Flex+Bison)  |
